@@ -1,9 +1,19 @@
+//====================================================================
+//====================================================================
+// DEFAULT PARAMETERS:
+
+// Default analog output when no triggers are happening.
 const int defaultOuptut = 0;
-bool newCommandAvailable = false;
-String serialCommand = "";
+
+// Default Trigger width in milliseconds.
 int triggerWidth = 200;
 
+//====================================================================
+//====================================================================
+
 const int pin_13 = 13;
+bool newCommandAvailable = false;
+String serialCommand = "";
 
 //====================================================================
 
@@ -35,7 +45,7 @@ void parseCommand()
     char charI = serialCommand.charAt(i);
     if(charI >= '0' && charI <= '9')
     {
-      commandValue += (charI - '0') * pow(10, commandLength - i);
+      commandValue += (charI - '0') * pow(10, (commandLength - 1) - i);
     }
     else if(charI == 'w') 
     {
@@ -69,8 +79,6 @@ void triggerWithHeight(int heightValue)
 
   PORTD = heightValue;
   digitalWrite(pin_13, HIGH);
-  Serial.print("T");
-  Serial.println(analogRead(A0));
   delay(triggerWidth);
   PORTD = defaultOuptut;
   digitalWrite(pin_13, LOW);
