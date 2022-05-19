@@ -1,4 +1,5 @@
 ## Arduino Analog Trigger
+Based on code from juangpc.
 
 ### Usage:
 
