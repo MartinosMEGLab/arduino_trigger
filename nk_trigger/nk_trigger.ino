@@ -1,12 +1,15 @@
+const int defaultOuptut = 0;
 bool newCommandAvailable = false;
 String serialCommand = "";
 int triggerWidth = 200;
 
+const int pin_13 = 13;
+
 //====================================================================
 
 void setup() {
+  pinMode(pin_13, OUTPUT);
   Serial.begin(9600);
-  inputString.reserve(30); // short commands plz
   DDRD = B11111111;
   PORTD = 0;
 }
@@ -15,28 +18,31 @@ void setup() {
 
 void loop() {
   if (newCommandAvailable) {
-    parseCommand(serialCommand);
+    parseCommand();
     readyForNextCommand();
   }
 }
 
 //====================================================================
 
-void parseCommand(String& command)
+void parseCommand()
 {
   int commandValue = 0;
-  char charI = '!';
-  
-  for(int i = command.length(); i >= 0; i++)
+  int commandLength = serialCommand.length();
+
+  for(int i = commandLength - 1; i >= 0; i--)
   {
-    charI = command.charAt(i);
-    if(charI > '0' && charI < '9')
+    char charI = serialCommand.charAt(i);
+    if(charI >= '0' && charI <= '9')
     {
-      commandValue += (charI - '0') * pow(10,i);
+      commandValue += (charI - '0') * pow(10, commandLength - i);
     }
-    else if(command.charAt(i) == 'w') 
+    else if(charI == 'w') 
     {
       setWidth(commandValue);
+      return;
+    } 
+    else {
       return;
     }
   }
@@ -55,15 +61,26 @@ void setWidth(int widthValue)
 
 void triggerWithHeight(int heightValue)
 {
-  PORTD = value;
+//  int initialTime = millis();
+//  while(millis() < initialTime + triggerWidth){
+//      PORTD = heightValue;
+//      digitalWrite(pin_13, HIGH);
+//  }
+
+  PORTD = heightValue;
+  digitalWrite(pin_13, HIGH);
+  Serial.print("T");
+  Serial.println(analogRead(A0));
   delay(triggerWidth);
-  PORTD = 0;
+  PORTD = defaultOuptut;
+  digitalWrite(pin_13, LOW);
 }
 
 //====================================================================
 
 void readyForNextCommand()
 {
+  serialCommand = "";
   newCommandAvailable = false;
 }
 
@@ -71,17 +88,12 @@ void readyForNextCommand()
 
 void serialEvent()
 {
-  char inChar;
   while (Serial.available()) {
-    // get the new byte:
-    inChar = (char)Serial.read();
-    // add it to the inputString:
-    serialCommand += inChar;
-    // if the incoming character is a newline, set a flag so the main loop can
-    // do something about it:
+    char inChar = (char)Serial.read();
     if (inChar == '\n') {
       newCommandAvailable = true;
       return;
     }
+    serialCommand += inChar;
   }
 }
